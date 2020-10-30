@@ -1,55 +1,59 @@
 package com.example.es.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * es 配置文件
+ *
  * @author jun
  */
+@Slf4j
 @Configuration
-public class ElasticSearchConfig extends AbstractElasticsearchConfiguration {
-    /**
-     * 单机
-     * @return
-     */
-    @Bean
-    public RestHighLevelClient restClient() {
-        RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost("127.0.0.1", 9200, "http")));
-        return client;
-    }
+public class ElasticSearchConfig {
 
-    /**
-     * 集群
-     * @return
-     */
+    @Value("${spring.elasticsearch.rest.uris}")
+    String[] ipAddress;
+
+    private static final int ADDRESS_LENGTH = 2;
+    private static final String HTTP_SCHEME = "http";
+
     @Bean
     public RestHighLevelClient restHighLevelClient() {
-        RestHighLevelClient client = new RestHighLevelClient(
+        return new RestHighLevelClient(
                 RestClient.builder(
-                        new HttpHost("192.168.99.100",9200, "http"),
-                        new HttpHost("192.168.99.100",9201,"http")));
-        return client;
+                        /*
+                        new HttpHost("192.168.99.100",9200, HTTP_SCHEME),
+                        new HttpHost("192.168.99.100",9201, HTTP_SCHEME),
+                        new HttpHost("192.168.99.100",9202, HTTP_SCHEME)*/
+                        Arrays.stream(ipAddress)
+                                .map(this::makeHttpHost)
+                                .filter(Objects::nonNull)
+                                .toArray(HttpHost[]::new)
+                )
+        );
     }
 
-    /**
-     * 方法二：继承Springboot依赖中提供的配置类
-     * @return
-     */
-    @Override
-    public RestHighLevelClient elasticsearchClient() {
-        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo("192.168.99.100:9200")
-                .build();
-
-        return RestClients.create(clientConfiguration).rest();
+    private HttpHost makeHttpHost(String s) {
+        assert !StringUtils.isEmpty(s);
+        String[] address = s.split(":");
+        if (address.length == ADDRESS_LENGTH) {
+            String ip = address[0];
+            int port = Integer.parseInt(address[1]);
+            log.info(ip + ":" + port);
+            return new HttpHost(ip, port, HTTP_SCHEME);
+        } else {
+            return null;
+        }
     }
+
 }
