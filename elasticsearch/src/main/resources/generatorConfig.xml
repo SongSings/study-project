@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <!-- 导入配置文件 -->
+    <properties resource="application.properties"/>
+
+    <!-- defaultModelType="flat" 设置复合主键时不单独为主键创建实体 -->
+    <context id="Mysql" targetRuntime="MyBatis3" defaultModelType="flat">
+
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+        <!--覆盖生成XML文件-->
+        <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin"/>
+        <!-- 生成的实体类添加toString()方法 -->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+        <!-- 生成的POJO实现java.io.Serializable接口 -->
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+
+        <!--注释-->
+        <commentGenerator>
+            <!-- 不生成注释 -->
+            <!--<property name="suppressAllComments" value="true"/>-->
+            <!-- 将数据库中表的字段描述信息添加到注释 -->
+            <property name="addRemarkComments" value="true"/>
+            <!-- 注释里不添加日期 -->
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接，直接通过${}读取application.properties里的配置 -->
+        <jdbcConnection
+                driverClass="com.mysql.jdbc.Driver"
+                connectionURL="${spring.datasource.url}"
+                userId="${spring.datasource.username}"
+                password="${spring.datasource.password}"/>
+
+        <!-- domain实体类的位置 -->
+        <javaModelGenerator targetProject="src\main\java"
+                            targetPackage="com.moppo.proxyip.domain"/>
+
+        <!-- mapper xml的位置 -->
+        <sqlMapGenerator targetProject="src\main\resources"
+                         targetPackage="mapper"/>
+
+        <!-- mapper类的位置 -->
+        <javaClientGenerator targetProject="src\main\java"
+                             targetPackage="com.moppo.proxyip.dao"
+                             type="XMLMAPPER"/>
+
+        <!-- 需要生成的实体类对应的表名，多个实体类复制多份该配置即可 -->
+        <table tableName="dictionary" domainObjectName="Dictionary"
+               enableCountByExample="true" enableUpdateByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="true"
+               selectByExampleQueryId="false">
+        </table>
+        <table tableName="log" domainObjectName="Log"
+               enableCountByExample="false" enableUpdateByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="false"
+               selectByExampleQueryId="false">
+        </table>
+    </context>
+</generatorConfiguration>

@@ -2,6 +2,7 @@ package com.example.es;
 
 import com.example.es.config.ElasticSearchUtil;
 import junit.framework.TestCase;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,27 @@ public class EsOpsTests {
     @Test
     void aggregation(){
         esClient.aggregation();
+    }
+
+
+    @Test
+    void test(){
+        try {
+            test2();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+    }
+
+    @SneakyThrows
+    void test1(){
+        System.out.println("666");
+        throw new Exception();
+    }
+
+    void test2(){
+        test1();
     }
 
 }
