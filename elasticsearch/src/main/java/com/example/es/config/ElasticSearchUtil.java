@@ -65,24 +65,6 @@ public class ElasticSearchUtil {
     private RestHighLevelClient client;
 
     /**
-     * 创建 mapping demo
-     * @param str
-     */
-    public void createMapping (String str) {
-        Map<String, Object> properties = new HashMap<>(16);
-        Map<String, Object> property = new HashMap<>(16);
-        // 类型
-        property.put("type", "text");
-        //
-        property.put("store", true);
-        // 分词器
-        property.put("analyzer", "ik_max_word");
-
-        // 字段
-        properties.put("username", property);
-    }
-
-    /**
      * 创建索引
      *
      * @param index  索引
@@ -96,7 +78,6 @@ public class ElasticSearchUtil {
         //创建索引
         CreateIndexRequest request = new CreateIndexRequest(index);
 
-
         // 2、设置索引的settings
         request.settings(Settings.builder()
                 // 分片数
@@ -108,7 +89,7 @@ public class ElasticSearchUtil {
         );
 
         // 3、设置索引的mapping 默认文档类型_doc
-        request.mapping(//"_doc",
+        request.mapping(
                 "{\n" +
                         "    \"properties\":{\n" +
                         "        \"id\":{\n" +
@@ -167,7 +148,6 @@ public class ElasticSearchUtil {
 
             client.indices().createAsync(request, listener);
             */
-
     }
 
     /**
@@ -209,7 +189,6 @@ public class ElasticSearchUtil {
         System.out.println("isAcknowledged = " + isAcknowledged);
         return isAcknowledged;
     }
-
 
     /**
      * 索引文档，即往索引里面放入文档数据.类似于数据库里面向表里面插入一行数据，一行数据就是一个文档
@@ -745,3 +724,4 @@ public class ElasticSearchUtil {
 
     }
 }
+//https://www.cnblogs.com/z00377750/p/13300196.html

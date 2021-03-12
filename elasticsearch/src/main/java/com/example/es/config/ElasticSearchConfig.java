@@ -31,10 +31,6 @@ public class ElasticSearchConfig {
     public RestHighLevelClient restHighLevelClient() {
         return new RestHighLevelClient(
                 RestClient.builder(
-                        /*
-                        new HttpHost("192.168.99.100",9200, HTTP_SCHEME),
-                        new HttpHost("192.168.99.100",9201, HTTP_SCHEME),
-                        new HttpHost("192.168.99.100",9202, HTTP_SCHEME)*/
                         Arrays.stream(ipAddress)
                                 .map(this::makeHttpHost)
                                 .filter(Objects::nonNull)
