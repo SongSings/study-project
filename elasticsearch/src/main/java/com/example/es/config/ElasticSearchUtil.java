@@ -6,6 +6,9 @@ import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.alias.Alias;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -13,11 +16,13 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
@@ -49,12 +54,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author jun
+ * @see ：https://www.cnblogs.com/z00377750/p/13300196.html
  */
 @Slf4j
 @Component
@@ -81,42 +86,20 @@ public class ElasticSearchUtil {
         // 2、设置索引的settings
         request.settings(Settings.builder()
                 // 分片数
-                // .put("index.number_of_shards", 3)
+                .put("index.number_of_shards", 1)
                 // 副本数
-                // .put("index.number_of_replicas", 2)
-                // 默认分词器
-                .put("analysis.analyzer.default.tokenizer", "ik_max_word")
+                .put("index.number_of_replicas", 1)
         );
 
         // 3、设置索引的mapping 默认文档类型_doc
-        request.mapping(
-                "{\n" +
-                        "    \"properties\":{\n" +
-                        "        \"id\":{\n" +
-                        "            \"type\":\"long\",\n" +
-                        "            \"store\":true\n" +
-                        "        },\n" +
-                        "        \"username\":{\n" +
-                        "            \"type\":\"text\",\n" +
-                        "            \"store\":true,\n" +
-                        "            \"analyzer\":\"ik_max_word\"\n" +
-                        "        },\n" +
-                        "        \"email\":{\n" +
-                        "            \"type\":\"text\",\n" +
-                        "            \"store\":true,\n" +
-                        "            \"analyzer\":\"ik_max_word\"\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}",
-                XContentType.JSON);
+        request.mapping(source, XContentType.JSON);
 
         // 4、 设置索引的别名
-        request.alias(new Alias("账户信息"));
+        request.alias(new Alias("User"));
 
         // 5、 发送请求
         // 5.1 同步方式发送请求
-        CreateIndexResponse createIndexResponse = client.indices()
-                .create(request, RequestOptions.DEFAULT);
+        CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
 
         // 6、处理响应
         boolean acknowledged = createIndexResponse.isAcknowledged();
@@ -156,37 +139,13 @@ public class ElasticSearchUtil {
      * @throws IOException
      */
     @SneakyThrows
-    public boolean putMappingRequest(String index) {
+    public boolean putMappingRequest(String index, String source) {
 
         PutMappingRequest request = new PutMappingRequest(index);
-        //request.type("_doc");
-        request.source(
-                "{\n" +
-                        "    \"properties\":{\n" +
-                        "        \"id\":{\n" +
-                        "            \"type\":\"long\",\n" +
-                        "            \"store\":true\n" +
-                        "        },\n" +
-                        "        \"username\":{\n" +
-                        "            \"type\":\"text\",\n" +
-                        "            \"store\":true,\n" +
-                        "            \"analyzer\":\"ik_max_word\"\n" +
-                        "        },\n" +
-                        "        \"email\":{\n" +
-                        "            \"type\":\"text\",\n" +
-                        "            \"store\":true,\n" +
-                        "            \"analyzer\":\"ik_max_word\"\n" +
-                        "        },\n" +
-                        "        \"age\":{\n" +
-                        "            \"type\":\"long\",\n" +
-                        "            \"store\":true\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}",
-                XContentType.JSON);
+        request.source(source, XContentType.JSON);
 
         boolean isAcknowledged = client.indices().putMapping(request, RequestOptions.DEFAULT).isAcknowledged();
-        System.out.println("isAcknowledged = " + isAcknowledged);
+        log.info("isAcknowledged = " + isAcknowledged);
         return isAcknowledged;
     }
 
@@ -196,45 +155,43 @@ public class ElasticSearchUtil {
      * @throws IOException
      */
     @SneakyThrows
-    public void indexDocument() {
+    public void indexDocument(String index) {
         // 1、创建索引请求
-        //new IndexRequestBuilder()
-        IndexRequest request = new IndexRequest(
-                "twitter",   //索引
-                "_doc",     // mapping type
-                "2");     //文档id
+        IndexRequest request = new IndexRequest(index);
+        // 自定义id,不传即使用自动生成guid
+        request.id("1");
 
         // 2、准备文档数据
         // 方式一：直接给JSON串
         String jsonString = "{" +
-                "\"id\":\"2\"," +
+                "\"id\":1," +
                 "\"username\":\"haha\"," +
-                "\"email\":\"wan@outlook.com\"" +
+                "\"email\":\"haha@outlook.com\"" +
                 "}";
         request.source(jsonString, XContentType.JSON);
 
         // 方式二：以map对象来表示文档
         // Map<String, Object> jsonMap = new HashMap<>();
-        // jsonMap.put("id", "1");
-        // jsonMap.put("messageId", "20201008");
-        // jsonMap.put("content", "trying out Elasticsearch");
+        // jsonMap.put("id", 2);
+        // jsonMap.put("username", "王二");
+        // jsonMap.put("email", "wang2@fox.com");
         // request.source(jsonMap);
 
         // 方式三：用XContentBuilder来构建文档
         // XContentBuilder builder = XContentFactory.jsonBuilder();
         // builder.startObject();
         // {
-        //     builder.field("id", "1");
-        //     builder.field("messageId", "20201008");
-        //     builder.field("content", "trying out Elasticsearch");
+        //     builder.field("id", 3);
+        //     builder.field("username", "张三");
+        //     builder.field("email", "zhang3@fox.com");
         // }
         // builder.endObject();
         // request.source(builder);
 
         // 方式四：直接用key-value对给出
-        // request.source("id", "1",
-        //         "messageId", "20201008",
-        //         "content", "trying out Elasticsearch",
+        // request.source("id", 4,
+        //         "username", "李四",
+        //         "email", "li4@fox.com",
 
         // 3、其他的一些可选设置
         // 设置routing值
@@ -257,21 +214,21 @@ public class ElasticSearchUtil {
             // 捕获，并处理异常
             //判断是否版本冲突、create但文档已存在冲突
             if (e.status() == RestStatus.CONFLICT) {
-                System.out.println("冲突了，请在此写冲突处理逻辑！" + e.getDetailedMessage());
+                log.info("冲突了，请在此写冲突处理逻辑！" + e.getDetailedMessage());
             }
-            System.out.println("索引异常");
+            log.info("索引异常");
         }
 
         //5、处理响应
         if (indexResponse != null) {
-            String index = indexResponse.getIndex();
-            String type = indexResponse.getType();
+            String indexz = indexResponse.getIndex();
             String id = indexResponse.getId();
+            log.info("id:{}", id);
             long version = indexResponse.getVersion();
             if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
-                System.out.println("新增文档成功，处理逻辑代码写到这里。");
+                log.info("新增文档成功，处理逻辑代码写到这里。");
             } else if (indexResponse.getResult() == DocWriteResponse.Result.UPDATED) {
-                System.out.println("修改文档成功，处理逻辑代码写到这里。");
+                log.info("修改文档成功，处理逻辑代码写到这里。");
             }
             // 分片处理信息
             ReplicationResponse.ShardInfo shardInfo = indexResponse.getShardInfo();
@@ -282,7 +239,7 @@ public class ElasticSearchUtil {
             if (shardInfo.getFailed() > 0) {
                 for (ReplicationResponse.ShardInfo.Failure failure : shardInfo.getFailures()) {
                     String reason = failure.reason();
-                    System.out.println("副本失败原因：" + reason);
+                    log.info("副本失败原因：" + reason);
                 }
             }
         }
@@ -293,12 +250,9 @@ public class ElasticSearchUtil {
      * 获取文档数据
      */
     @SneakyThrows
-    public void getDocument() {
+    public void getDocument(String index, String id) {
         // 1、创建获取文档请求
-        GetRequest request = new GetRequest(
-                "twitter",   //索引
-                "_doc",     // mapping type
-                "1");     //文档id
+        GetRequest request = new GetRequest(index, id);
 
         // 2、可选的设置
         //request.routing("routing");
@@ -341,9 +295,9 @@ public class ElasticSearchUtil {
 
         //4、处理响应
         if (getResponse != null) {
-            String index = getResponse.getIndex();
+            index = getResponse.getIndex();
             String type = getResponse.getType();
-            String id = getResponse.getId();
+            id = getResponse.getId();
             if (getResponse.isExists()) { // 文档存在
                 long version = getResponse.getVersion();
                 String sourceAsString = getResponse.getSourceAsString(); //结果取成 String
@@ -373,11 +327,14 @@ public class ElasticSearchUtil {
             */
     }
 
+    /**
+     * 条件分页查询
+     * @param index
+     */
     @SneakyThrows
-    public void search() {
+    public void search(String index) {
         // 1、创建search请求
-        SearchRequest searchRequest = new SearchRequest("twitter");
-        searchRequest.types("_doc");
+        SearchRequest searchRequest = new SearchRequest(index);
 
         // 2、用SearchSourceBuilder来构造查询请求体 ,请仔细查看它的方法，构造各种查询的方法都在这。
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -392,7 +349,7 @@ public class ElasticSearchUtil {
                    .maxExpansions(10);
            sourceBuilder.query(matchQueryBuilder);*/
 
-        sourceBuilder.query(QueryBuilders.termQuery("email", "yz808@outlook.com"));
+        sourceBuilder.query(QueryBuilders.matchQuery("email", "haha@outlook.com"));
         // 设置from确定结果索引以开始搜索的选项。预设为0。
         sourceBuilder.from(0);
         // 设置size用于确定要返回的搜索命中次数的选项。默认为10
@@ -476,8 +433,7 @@ public class ElasticSearchUtil {
         for (SearchHit hit : searchHits) {
             // do something with the SearchHit
 
-            String index = hit.getIndex();
-            String type = hit.getType();
+            index = hit.getIndex();
             String id = hit.getId();
             float score = hit.getScore();
 
@@ -490,7 +446,7 @@ public class ElasticSearchUtil {
                 List<Object> users = (List<Object>) sourceAsMap.get("user");
                 Map<String, Object> innerObject = (Map<String, Object>) sourceAsMap.get("innerObject");
                 */
-            log.info("index:" + index + "  type:" + type + "  id:" + id);
+            log.info("index:" + index + "  id:" + id);
             log.info(sourceAsString);
 
             //取高亮结果
@@ -540,16 +496,16 @@ public class ElasticSearchUtil {
      * 高亮
      */
     @SneakyThrows
-    public void highlight() {
+    public void highlight(String index) {
 
         // 1、创建search请求
-        SearchRequest searchRequest = new SearchRequest("twitter");
+        SearchRequest searchRequest = new SearchRequest(index);
 
         // 2、用SearchSourceBuilder来构造查询请求体 ,请仔细查看它的方法，构造各种查询的方法都在这。
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
         //构造QueryBuilder
-        QueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("username", "JonssonYan");
+        QueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("username", "haha");
         sourceBuilder.query(matchQueryBuilder);
 
         //分页设置
@@ -585,7 +541,7 @@ public class ElasticSearchUtil {
 
             SearchHit[] searchHits = hits.getHits();
             for (SearchHit hit : searchHits) {
-                String index = hit.getIndex();
+                index = hit.getIndex();
                 String type = hit.getType();
                 String id = hit.getId();
                 float score = hit.getScore();
@@ -631,10 +587,10 @@ public class ElasticSearchUtil {
      * 词项建议拼写检查，检查用户的拼写是否错误，如果有错给用户推荐正确的词，appel->apple
      */
     @SneakyThrows
-    public void termSuggest() {
+    public void termSuggest(String index) {
         // 1、创建search请求
         //SearchRequest searchRequest = new SearchRequest();
-        SearchRequest searchRequest = new SearchRequest("twitter");
+        SearchRequest searchRequest = new SearchRequest(index);
 
         // 2、用SearchSourceBuilder来构造查询请求体 ,请仔细查看它的方法，构造各种查询的方法都在这。
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -643,7 +599,7 @@ public class ElasticSearchUtil {
 
         //做查询建议
         //词项建议
-        SuggestionBuilder termSuggestionBuilder = SuggestBuilders.termSuggestion("username").text("JonssonYa");
+        SuggestionBuilder termSuggestionBuilder = SuggestBuilders.termSuggestion("username").text("haga");
         SuggestBuilder suggestBuilder = new SuggestBuilder();
         suggestBuilder.addSuggestion("suggest_user", termSuggestionBuilder);
         sourceBuilder.suggest(suggestBuilder);
@@ -670,11 +626,11 @@ public class ElasticSearchUtil {
     }
 
     @SneakyThrows
-    public void aggregation() {
+    public void aggregation(String index) {
 
         // 1、创建search请求
         //SearchRequest searchRequest = new SearchRequest();
-        SearchRequest searchRequest = new SearchRequest("twitter");
+        SearchRequest searchRequest = new SearchRequest(index);
 
         // 2、用SearchSourceBuilder来构造查询请求体 ,请仔细查看它的方法，构造各种查询的方法都在这。
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -723,5 +679,78 @@ public class ElasticSearchUtil {
 
 
     }
+
+    /**
+     * 索引是否存在
+     * @param indexName
+     * @return
+     */
+    public boolean exists(String indexName) {
+        GetIndexRequest request = new GetIndexRequest(indexName);
+        request.local(false);
+        request.humanReadable(true);
+        request.includeDefaults(false);
+        try {
+            return client.indices().exists(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 删除索引
+     * @param index
+     * @return
+     */
+    public boolean deleteIndex(String index){
+        boolean exists = exists(index);
+        if(!exists) {
+            //不存在就结束
+            return false;
+        }
+        //索引存在，就执行删除
+        long s = System.currentTimeMillis();
+        DeleteIndexRequest request = new DeleteIndexRequest(index);
+        request.timeout(TimeValue.timeValueMinutes(2));
+        request.timeout("2m");
+        AcknowledgedResponse delete = new AcknowledgedResponse(false);
+        try {
+            delete = client.indices().delete(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        long t = System.currentTimeMillis();
+        //计算删除耗时
+        System.out.println(t-s);
+        return delete.isAcknowledged();
+    }
+
+    /**
+     * 删除文档
+     * @param index
+     * @param id
+     * @return
+     */
+    @SneakyThrows
+    public void deleteDocument(String index, String id){
+        boolean exists = exists(index);
+        if(!exists) {
+            //不存在就结束
+            return;
+        }
+        //索引存在，就执行删除
+        DeleteRequest request = new DeleteRequest(index,id);
+        request.timeout(TimeValue.timeValueMinutes(2));
+        request.timeout("2m");
+        DeleteResponse deleteResponse = client.delete(request, RequestOptions.DEFAULT);
+        System.out.println(deleteResponse);
+    }
 }
-//https://www.cnblogs.com/z00377750/p/13300196.html

@@ -2,11 +2,17 @@ package com.example.es;
 
 import com.example.es.config.ElasticSearchUtil;
 import junit.framework.TestCase;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+
+/**
+ * @author songjun
+ * @date 2021-03-24
+ * @desc es方法测试类
+ */
 
 @Slf4j
 @SpringBootTest
@@ -15,68 +21,117 @@ public class EsOpsTests {
     @Autowired
     ElasticSearchUtil esClient;
 
+    private static final String source = "{\n" +
+            "    \"properties\":{\n" +
+            "        \"id\":{\n" +
+            "            \"type\":\"long\"\n" +
+            "        },\n" +
+            "        \"username\":{\n" +
+            "            \"type\":\"text\",\n" +
+            "            \"fields\":{\n" +
+            "                \"keyword\":{\n" +
+            "                    \"type\":\"keyword\",\n" +
+            "                    \"ignore_above\":256\n" +
+            "                }\n" +
+            "            }\n" +
+            "        },\n" +
+            "        \"create_time\":{\n" +
+            "            \"type\":\"date\"\n" +
+            "        },\n" +
+            "        \"email\":{\n" +
+            "            \"type\":\"text\",\n" +
+            "            \"fields\":{\n" +
+            "                \"keyword\":{\n" +
+            "                    \"type\":\"keyword\",\n" +
+            "                    \"ignore_above\":256\n" +
+            "                }\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
+    private static final String index = "record";
+
+    /**
+     * create index
+     */
     @Test
     void createIndex() {
-        final boolean twitter = esClient.createIndex("twitter", "");
-        TestCase.assertEquals(twitter,true);
+        boolean create_flag = esClient.createIndex(index, source);
+        TestCase.assertEquals(create_flag, true);
     }
 
+    /**
+     * update index‘s mapping
+     */
     @Test
     void putMapping() {
-        boolean twitter = esClient.putMappingRequest("twitter");
-        //Assert.assertEquals(twitter,true);
-        TestCase.assertEquals(twitter,true);
+        boolean flag = esClient.putMappingRequest(index, source);
+        TestCase.assertEquals(flag, true);
+    }
+
+    /**
+     * 索引文档，即往索引里面放入文档数据
+     */
+    @Test
+    void indexDocumentTests() {
+        esClient.indexDocument(index);
+    }
+
+    /**
+     * select document by id
+     */
+    @Test
+    void getDocument() {
+        esClient.getDocument(index, "1");
+    }
+
+    /**
+     * Paging query
+     */
+    @Test
+    void search() {
+        esClient.search(index);
+    }
+
+    /**
+     * 高亮查询
+     */
+    @Test
+    void highlight() {
+        esClient.highlight(index);
+    }
+
+    /**
+     * 查询建议
+     */
+    @Test
+    void termSuggest() {
+        esClient.termSuggest(index);
     }
 
     @Test
-    void indexDocumentTests(){
-        esClient.indexDocument();
+    void aggregation() {
+        esClient.aggregation(index);
     }
 
+    /**
+     * delete index
+     */
     @Test
-    void getDocument(){
-        esClient.getDocument();
+    void deleteIndex() {
+        boolean deleteFlag = esClient.deleteIndex(index);
+        TestCase.assertEquals(deleteFlag, true);
     }
 
+    /**
+     * delete document by id
+     */
     @Test
-    void search(){
-        esClient.search();
+    void deleteDocument() {
+        esClient.deleteDocument(index, "1");
     }
-
-    @Test
-    void highlight(){
-        esClient.highlight();
-    }
-
-    @Test
-    void termSuggest(){
-        esClient.termSuggest();
-    }
-
-    @Test
-    void aggregation(){
-        esClient.aggregation();
-    }
-
-
-    @Test
-    void test(){
-        try {
-            test2();
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-
-    }
-
-    @SneakyThrows
-    void test1(){
-        System.out.println("666");
-        throw new Exception();
-    }
-
-    void test2(){
-        test1();
-    }
+    /**
+     * todo add Cursor paging query
+     */
 
 }
