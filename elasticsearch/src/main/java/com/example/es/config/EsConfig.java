@@ -10,6 +10,12 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 
+/**
+ * es config
+ *
+ * @author song
+ * @date 2021/3/25
+ */
 @Slf4j
 @Configuration
 public class EsConfig  extends AbstractElasticsearchConfiguration {

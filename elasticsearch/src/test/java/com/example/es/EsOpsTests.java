@@ -1,11 +1,15 @@
 package com.example.es;
 
 import com.example.es.config.ElasticSearchUtil;
+import com.example.es.model.QueryDTO;
 import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -74,7 +78,7 @@ public class EsOpsTests {
      */
     @Test
     void indexDocumentTests() {
-        esClient.indexDocument(index);
+        esClient.indexDocument(index,"2");
     }
 
     /**
@@ -130,8 +134,15 @@ public class EsOpsTests {
     void deleteDocument() {
         esClient.deleteDocument(index, "1");
     }
+
     /**
-     * todo add Cursor paging query
+     *  Cursor query
      */
+    @Test
+    void scrollSearch() {
+        QueryDTO queryDTO = new QueryDTO().size(1).current(1);
+        List<Map<String, Object>> mapList = esClient.scrollSearch(index, queryDTO);
+        System.out.println("mapList = " + mapList);
+    }
 
 }

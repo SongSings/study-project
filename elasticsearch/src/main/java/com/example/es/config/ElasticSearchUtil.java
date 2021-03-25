@@ -1,5 +1,6 @@
 package com.example.es.config;
 
+import com.example.es.model.QueryDTO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
@@ -13,9 +14,7 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.ShardSearchFailure;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -29,9 +28,11 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -44,6 +45,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
@@ -54,8 +57,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
 
 /**
  * @author jun
@@ -155,27 +163,28 @@ public class ElasticSearchUtil {
      * @throws IOException
      */
     @SneakyThrows
-    public void indexDocument(String index) {
+    public void indexDocument(String index,String id) {
         // 1、创建索引请求
         IndexRequest request = new IndexRequest(index);
-        // 自定义id,不传即使用自动生成guid
-        request.id("1");
+        // 设置自定义id,不传即使用自动生成guid
+        request.id(id);
 
         // 2、准备文档数据
         // 方式一：直接给JSON串
-        String jsonString = "{" +
-                "\"id\":1," +
-                "\"username\":\"haha\"," +
-                "\"email\":\"haha@outlook.com\"" +
-                "}";
-        request.source(jsonString, XContentType.JSON);
+//        String jsonString = "{" +
+//                "\"id\":1," +
+//                "\"username\":\"haha\"," +
+//                "\"email\":\"haha@outlook.com\"" +
+//                "}";
+//        request.source(jsonString, XContentType.JSON);
 
         // 方式二：以map对象来表示文档
-        // Map<String, Object> jsonMap = new HashMap<>();
-        // jsonMap.put("id", 2);
-        // jsonMap.put("username", "王二");
-        // jsonMap.put("email", "wang2@fox.com");
-        // request.source(jsonMap);
+        Map<String, Object> jsonMap = new HashMap<>(8);
+        jsonMap.put("id", id);
+        jsonMap.put("username", "王二");
+        jsonMap.put("email", "wang2@fox.com");
+        jsonMap.put("create_time", System.currentTimeMillis());
+        request.source(jsonMap);
 
         // 方式三：用XContentBuilder来构建文档
         // XContentBuilder builder = XContentFactory.jsonBuilder();
@@ -221,8 +230,8 @@ public class ElasticSearchUtil {
 
         //5、处理响应
         if (indexResponse != null) {
-            String indexz = indexResponse.getIndex();
-            String id = indexResponse.getId();
+            index = indexResponse.getIndex();
+            id = indexResponse.getId();
             log.info("id:{}", id);
             long version = indexResponse.getVersion();
             if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
@@ -714,7 +723,6 @@ public class ElasticSearchUtil {
         long s = System.currentTimeMillis();
         DeleteIndexRequest request = new DeleteIndexRequest(index);
         request.timeout(TimeValue.timeValueMinutes(2));
-        request.timeout("2m");
         AcknowledgedResponse delete = new AcknowledgedResponse(false);
         try {
             delete = client.indices().delete(request, RequestOptions.DEFAULT);
@@ -748,9 +756,73 @@ public class ElasticSearchUtil {
         }
         //索引存在，就执行删除
         DeleteRequest request = new DeleteRequest(index,id);
-        request.timeout(TimeValue.timeValueMinutes(2));
-        request.timeout("2m");
         DeleteResponse deleteResponse = client.delete(request, RequestOptions.DEFAULT);
         System.out.println(deleteResponse);
+    }
+
+    /**
+     * 滚动搜索,使用游标
+     * @param index
+     * @param dto
+     * @return
+     */
+    public List<Map<String, Object>> scrollSearch(String index, QueryDTO dto) {
+        SearchRequest searchRequest = new SearchRequest(index);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        // 查询条件
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.rangeQuery("create_time").gte(dto.fromTime()).lte(dto.endTime()));
+        searchSourceBuilder.query(queryBuilder).sort(new FieldSortBuilder("id").order(SortOrder.DESC))
+                .size(dto.size());
+        searchRequest.source(searchSourceBuilder);
+
+        List<Map<String, Object>> mapList = null;
+        try {
+            //SCROLL_TIMEOUT是快照保存时间
+            List<SearchHit> searchHits = scrollSearch(300L, searchRequest);
+
+            mapList = getMapForSearchHit(searchHits);
+        } catch (IOException e) {
+            log.error("################ 高危操作日志游标查询异常！ ##################");
+        }
+
+        return mapList;
+    }
+
+    public List<SearchHit> scrollSearch(Long scrollTimeOut, SearchRequest searchRequest) throws IOException {
+        Scroll scroll = new Scroll(timeValueSeconds(scrollTimeOut));
+        searchRequest.scroll(scroll);
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        String scrollId = searchResponse.getScrollId();
+        SearchHit[] hits = searchResponse.getHits().getHits();
+        System.out.println("es search total count = " + searchResponse.getHits().getTotalHits());
+        List<SearchHit> resultSearchHit = new ArrayList<>();
+
+        while (hits != null && hits.length > 0) {
+            for (SearchHit hit : hits) {
+                resultSearchHit.add(hit);
+            }
+            SearchScrollRequest searchScrollRequest = new SearchScrollRequest(scrollId);
+            searchScrollRequest.scroll(scroll);
+            SearchResponse searchScrollResponse = client.scroll(searchScrollRequest, RequestOptions.DEFAULT);
+            scrollId = searchScrollResponse.getScrollId();
+            hits = searchScrollResponse.getHits().getHits();
+
+        }
+        //及时清除es快照，释放资源
+        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+        clearScrollRequest.addScrollId(scrollId);
+        client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+        return resultSearchHit;
+    }
+
+    public static List<Map<String, Object>> getMapForSearchHit(List<SearchHit> resultHits) {
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        for (SearchHit hit : resultHits) {
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            mapList.add(sourceAsMap);
+        }
+        return mapList;
     }
 }
