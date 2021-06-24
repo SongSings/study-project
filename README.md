@@ -1,13 +1,14 @@
-# es
-es study
+# project study demo
 
-版本环境
-Version
+## 1.es
 
-jdk:1.8
+## 2.webflux
+   响应式编程框架
+   
+## 3.websocket
+   对应前端html在static目录下
+   
+## 4.hibernate jpa ((Java Persistence API)是Sun官方提出的Java持久化规范)
 
-elasticsearch：7.6.2
 
-spring boot ：2.3.4
-
-Spring Data Elasticsearch: 4.0.4.RELEASE
+  
