@@ -27,11 +27,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(Long id) {
         Optional<User> userOptional = userRepository.findById(id);
-        return userOptional.get();
+        return userOptional.orElse(new User());
     }
 
     @Override
-    public Page<User> tables(UserQueryVo userQueryVo) {
+    public Page<User> queryPage(UserQueryVo userQueryVo) {
         PageRequest pageRequest = PageRequest.of(0, 10);
         Specification<User> specification = new UserSpecification(userQueryVo);
         return userRepository.findAll(specification, pageRequest);

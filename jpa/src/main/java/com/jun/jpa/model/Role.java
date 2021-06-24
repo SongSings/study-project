@@ -35,6 +35,6 @@ public class Role {
      * 一对一的关系 在其中一个表维护就好了
      */
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name = "permission_id", insertable = true, updatable = false)
+    @JoinColumn(name = "permission_id", updatable = false)
     private Permission permission;
 }

@@ -17,7 +17,7 @@ import java.util.List;
  * @date 2021-06-24
  * @desc
  */
-public class UserSpecification  implements Specification<User> {
+public class UserSpecification implements Specification<User> {
 
     private UserQueryVo param;
 
@@ -49,7 +49,7 @@ public class UserSpecification  implements Specification<User> {
          * 跨表查询，3个表
          * 需要通过权限名称查出对应的用户，User.role.permission = param.getPermissionName()
          * JoinType.LEFT主要是说"role"这个属性是在哪个表中，这里是在User中。
-         * 此处debug就可以发现，执行第一行之后，join中的Model就变成了Role。(图贴在后面)
+         * 此处debug就可以发现，执行第一行之后，join中的Model就变成了Role。
          * 此处是要通过权限名称查出对应的用户。所以先root.join("role", JoinType.LEFT)拿到JpaRole，然后再join.get("permission")拿到Permission ，然后再匹配它的属性permissionName
          * 这里就是get出相应的属性，一直到你得到想要的属性为止。
          */

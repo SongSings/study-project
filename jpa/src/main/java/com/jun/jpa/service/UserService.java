@@ -10,5 +10,5 @@ import org.springframework.data.domain.Page;
  */
 public interface UserService extends IService<User,Long>{
 
-    Page<User> tables(UserQueryVo userQueryVo);
+    Page<User> queryPage(UserQueryVo userQueryVo);
 }

@@ -1,5 +1,6 @@
 package com.jun.jpa.config;
 
+import com.jun.jpa.util.SpringContextUtil;
 import io.swagger.models.auth.In;
 import org.springframework.boot.SpringBootVersion;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,7 @@ public class SwaggerConfiguration {
                 .apiInfo(apiInfo())
 
                 // 接口调试地址
-                .host("http://localhost:80")
+                .host("http://localhost:"+ SpringContextUtil.getApplicationContext().getEnvironment().getProperty("server.port"))
 
                 // 选择哪些接口作为swagger的doc发布
                 .select()

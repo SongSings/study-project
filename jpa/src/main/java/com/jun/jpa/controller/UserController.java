@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 /**
  * @author songjun
  * @date 2021-06-23
@@ -30,6 +29,6 @@ public class UserController {
 
     @GetMapping("query")
     public Page<?> queryUser(UserQueryVo userQueryVo){
-        return userService.tables(userQueryVo);
+        return userService.queryPage(userQueryVo);
     }
 }
