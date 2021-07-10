@@ -1,10 +1,12 @@
 package com.jun.webflux.model;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDate;
+import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * @author songjun
@@ -13,20 +15,25 @@ import java.time.LocalDate;
  */
 @Data
 @Table("user")
-public class User {
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     private Long id;
 
-    private String userName;
-
-    private Byte sex;
-
     private Integer age;
 
-    private LocalDate birthday;
+    private BigDecimal latitude;
 
-    private String email;
+    private BigDecimal longitude;
 
-    private String content;
+    private String nickName;
+
+    private String position;
+
+    @ApiModelProperty(value = "用户名")
+    private String userName;
+
+    private Long roleId;
 }
