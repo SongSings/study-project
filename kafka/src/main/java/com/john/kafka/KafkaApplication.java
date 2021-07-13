@@ -1,6 +1,6 @@
 package com.john.kafka;
 
-import com.john.kafka.component.KafkaSender;
+import com.john.kafka.provider.KafkaSender;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;

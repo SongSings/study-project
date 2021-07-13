@@ -1,4 +1,4 @@
-package com.john.kafka.component;
+package com.john.kafka.provider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
