@@ -1,0 +1,16 @@
+spring:
+  redis:
+    database: 2
+    host: marketing-redis
+    password: ''
+    port: 6369
+  cache:
+    redis:
+      key-prefix: 'redis-test:'
+      useKeyPrefix: true
+      #default-expiration: 20
+      cache-null-values: true
+    type: redis
+
+server:
+  port: 7002

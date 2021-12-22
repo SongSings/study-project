@@ -11,4 +11,5 @@
 ## 4.hibernate jpa ((Java Persistence API)是Sun官方提出的Java持久化规范)
 
 
-  
+## 5.redis
+    使用 Spring Cache注解 及 RedisTemplate单独的使用

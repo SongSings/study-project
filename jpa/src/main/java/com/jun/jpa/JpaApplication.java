@@ -22,7 +22,7 @@ public class JpaApplication {
                 "Application is running! Access URLs:\n\t" +
                 "Local: \t\thttp://localhost:" + port + "/\n\t" +
                 "External: \thttp://" + ip + ":" + port + "/\n\t" +
-                "Swagger-ui: \thttp://" + ip + ":" + port + "/swagger-ui/index.html\n" +
+                "Swagger-ui: http://" + ip + ":" + port + "/swagger-ui/index.html\n" +
                 "----------------------------------------------------------");
 
     }
