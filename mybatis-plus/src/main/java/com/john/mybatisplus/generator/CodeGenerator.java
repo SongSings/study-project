@@ -33,7 +33,7 @@ public class CodeGenerator {
         gc.setFileOverride(true); //重新生成时文件是否覆盖
         gc.setServiceName("%sService"); //去掉Service接口的首字母I
         gc.setIdType(IdType.ID_WORKER_STR); //主键策略
-        gc.setDateType(DateType.ONLY_DATE);//定义生成的实体类中日期类型
+        gc.setDateType(DateType.TIME_PACK);//定义生成的实体类中日期类型
         gc.setSwagger2(true);//开启Swagger2模式
 
         mpg.setGlobalConfig(gc);
@@ -70,9 +70,11 @@ public class CodeGenerator {
         strategy.setEntityLombokModel(true); // lombok 模型 @Accessors(chain = true) setter链式操作
 
         strategy.setRestControllerStyle(true); //restful api风格控制器
-        strategy.setControllerMappingHyphenStyle(true); //url中驼峰转连字符
+        strategy.setControllerMappingHyphenStyle(false); //url中驼峰转连字符
         // 公共父类
         //strategy.setSuperControllerClass("你自己的父类控制器,没有就不用设置!");
+
+        strategy.setLogicDeleteFieldName("deleted");
 
         mpg.setStrategy(strategy);
 
