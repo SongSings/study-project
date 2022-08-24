@@ -37,3 +37,6 @@ elasticsearch/.gitignore
 elasticsearch/.mvn/
 elasticsearch/mvnw
 elasticsearch/mvnw.cmd
+/study-project.iml
+/target/
+/redis/target/
