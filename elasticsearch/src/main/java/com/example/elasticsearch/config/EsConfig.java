@@ -1,4 +1,4 @@
-package com.example.es.config;
+package com.example.elasticsearch.config;
 
 
 import lombok.extern.slf4j.Slf4j;

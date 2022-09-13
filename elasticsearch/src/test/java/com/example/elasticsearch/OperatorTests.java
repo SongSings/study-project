@@ -1,6 +1,4 @@
-package com.example.es;
-
-import java.util.HashMap;
+package com.example.elasticsearch;
 
 /**
  * @author songjun

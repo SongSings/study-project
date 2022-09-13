@@ -1,4 +1,4 @@
-package com.example.es.web.controller;
+package com.example.elasticsearch.web.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 

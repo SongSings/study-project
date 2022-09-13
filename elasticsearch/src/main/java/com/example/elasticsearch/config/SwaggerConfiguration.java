@@ -1,4 +1,4 @@
-package com.example.es.config;
+package com.example.elasticsearch.config;
 
 import io.swagger.models.auth.In;
 import org.springframework.boot.SpringBootVersion;

@@ -1,6 +1,6 @@
-package com.example.es.config;
+package com.example.elasticsearch.config;
 
-import com.example.es.model.QueryDTO;
+import com.example.elasticsearch.model.QueryDTO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;

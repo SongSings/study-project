@@ -1,7 +1,7 @@
-package com.example.es;
+package com.example.elasticsearch;
 
-import com.example.es.config.ElasticSearchUtil;
-import com.example.es.model.QueryDTO;
+import com.example.elasticsearch.config.ElasticSearchUtil;
+import com.example.elasticsearch.model.QueryDTO;
 import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

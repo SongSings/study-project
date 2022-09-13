@@ -1,4 +1,4 @@
-package com.example.es.model;
+package com.example.elasticsearch.model;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
