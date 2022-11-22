@@ -13,3 +13,10 @@
 
 ## 5.redis
     使用 Spring Cache注解 及 RedisTemplate单独的使用
+
+## 6.observer
+    Spring Event实现发布/订阅模式
+
+## TODO
+- 多线程练习
+- and so on

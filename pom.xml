@@ -25,6 +25,7 @@
         <module>redis</module>
         <module>sign</module>
         <module>dingtalk</module>
+        <module>observer</module>
     </modules>
     
 </project>
