@@ -6,11 +6,11 @@ spring:
     port: 6369
   cache:
     redis:
-      key-prefix: ''
+      key-prefix: 'test'
       useKeyPrefix: false
       #default-expiration: 20
       cache-null-values: true
     type: redis
 
 server:
-  port: 7002
+  port: 7003
