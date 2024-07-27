@@ -26,6 +26,7 @@
         <module>sign</module>
         <module>dingtalk</module>
         <module>observer</module>
+        <module>redis-stream</module>
     </modules>
     
 </project>
