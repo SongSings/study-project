@@ -5,6 +5,7 @@ import com.jun.observer.domain.ApiTestIndex;
 import com.jun.observer.mapper.ApiTestMapper;
 import lombok.RequiredArgsConstructor;
 import org.dromara.easyes.core.conditions.select.LambdaEsQueryWrapper;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -82,7 +83,21 @@ public class ApiController {
     public List<ApiTestIndex> search(String name) {
         // 3.查询出所有标题为老汉的文档列表
         LambdaEsQueryWrapper<ApiTestIndex> wrapper = new LambdaEsQueryWrapper<>();
-        wrapper.eq(ApiTestIndex::getName, name);
+        wrapper.eq(StringUtils.hasText(name), ApiTestIndex::getName, name);
+        wrapper.like(!StringUtils.hasText(name), ApiTestIndex::getName, "V3");
         return apiTestMapper.selectList(wrapper);
+    }
+
+    @DeleteMapping("del")
+    public void del() {
+        LambdaEsQueryWrapper<ApiTestIndex> wrapper = new LambdaEsQueryWrapper<>();
+        // 删除全部数据
+        apiTestMapper.delete(wrapper);
+    }
+
+    @DeleteMapping("delIndex")
+    public void delIndex() {
+        // 删除索引
+        apiTestMapper.deleteIndex("api-test-index");
     }
 }
