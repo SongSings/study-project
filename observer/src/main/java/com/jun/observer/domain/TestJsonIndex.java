@@ -21,6 +21,12 @@ public class TestJsonIndex {
      * 文档标题
      */
     private String title;
+
+    private String returnBody;
+
+    private String head;
+
+    private String body;
     /**
      * 文档内容
      */

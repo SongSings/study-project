@@ -1,0 +1,20 @@
+server:
+  port: 8989
+spring:
+  application:
+    name: swagger
+  main:
+    allow-bean-definition-overriding: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /api-docs
+    urls:
+      - {name: 'a', url: 'http://192.168.2.1:10001/v2/api-docs?group=a'}
+      - {name: 'b', url: 'http://192.168.2.1:10002/v2/api-docs?group=b'}
+
+swagger-ui:
+  enabled: true

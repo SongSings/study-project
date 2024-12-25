@@ -27,6 +27,7 @@
         <module>dingtalk</module>
         <module>observer</module>
         <module>redis-stream</module>
+        <module>swagger</module>
     </modules>
     
 </project>

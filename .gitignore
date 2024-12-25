@@ -40,3 +40,8 @@ elasticsearch/mvnw.cmd
 /study-project.iml
 /target/
 /redis/target/
+/swagger/.mvn/
+/swagger/mvnw.cmd
+/swagger/HELP.md
+/swagger/mvnw
+/observer/.mvn/
